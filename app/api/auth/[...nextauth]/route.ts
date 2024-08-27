@@ -1,15 +1,17 @@
 //File app/api/auth/[...nextauth]/route.ts
 
 import NextAuth, { NextAuthOptions } from 'next-auth';
-import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { PrismaClient } from '@prisma/client'
-import { compare } from 'bcrypt';
 
-const prisma = new PrismaClient()
+// Mock user for demonstration purposes
+const mockUser = {
+  id: '1',
+  email: 'user@example.com',
+  name: 'Test User',
+  password: 'password123' // In a real app, this would be hashed
+};
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
       name: 'Credentials',
@@ -21,23 +23,17 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.email || !credentials?.password) {
           return null;
         }
-        const user = await prisma.user.findUnique({
-          where: {
-            email: credentials.email
-          }
-        });
-        if (!user) {
-          return null;
+        
+        // Check against our mock user
+        if (credentials.email === mockUser.email && credentials.password === mockUser.password) {
+          return {
+            id: mockUser.id,
+            email: mockUser.email,
+            name: mockUser.name,
+          };
         }
-        const isPasswordValid = await compare(credentials.password, user.password);
-        if (!isPasswordValid) {
-          return null;
-        }
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-        };
+        
+        return null;
       }
     })
   ],
